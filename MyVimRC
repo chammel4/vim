@@ -1,0 +1,94 @@
+set autoindent
+set smartindent
+set tabstop=4 
+set softtabstop=4
+set shiftwidth=4 
+set nu
+set wildmenu
+set wildmode=full
+"colo murphy
+" if has('gui_running')
+" 	set background=dark
+" 	colorscheme solarized
+" else
+" 	colorscheme zenburn
+" endif
+
+call togglebg#map("<F5>")
+
+let g:python_highlight_all=1
+syntax on
+
+"type-specific params
+au BufNewFile,BufRead #.py
+    \ set tabstop=4 
+    \ set softtabstop=4
+    \ set shiftwidth=4 
+    \ set expandtab
+    \ set textwidth = 79
+    \ set fileformat=unix
+    \ set encoding=utf-8
+au FileType python nnoremap <buffer> <F9> :exec 'w !python' shellescape(@%, 1)<cr>
+
+au BufNewFile,BufRead #.js, #.html, #.css
+    \ set tabstop=2
+    \ set softtabstop=2
+    \ set shiftwidth=2
+
+"Flagging Unnecessary Whitespace
+highlight BadWhitespace ctermbg=red guibg=darkred
+au BufRead,BufNewFile *.py,*.pyw,*.c,*.h match BadWhitespace /\s\+$/
+
+"split navigations
+nnoremap <C-J> <C-W><C-j>
+nnoremap <C-K> <C-W><C-k>
+nnoremap <C-L> <C-W><C-l>
+nnoremap <C-H> <C-W><C-h>
+set splitbelow
+set splitright
+
+"split resizing
+nnoremap <lt> <C-W><lt>
+"nnoremap > <C-W><gt>
+ 
+"code folding
+set foldmethod=indent
+set foldlevel=99
+nnoremap <space> za
+
+let g:SimpylFold_docstring_preview=1
+
+"YouCompleteMe params
+let g:ycm_autoclose_preview_window_after_completion=1
+map <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
+
+
+set nocompatible
+filetype on 
+
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'flazz/vim-colorschemes'
+Plugin 'Conque-GDB'
+Plugin 'scrooloose/NERDtree'
+Plugin 'tmhedberg/SimpylFold'
+Plugin 'vim-scripts/indentpython.vim'
+Plugin 'vim-syntastic/syntastic'
+Plugin 'nvie/vim-flake8'
+Plugin 'kien/ctrlp.vim'
+Plugin 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
+Plugin 'jnurmine/Zenburn'
+Plugin 'altercation/vim-colors-solarized'
+Plugin 'vim-python/python-syntax'
+Plugin 'tpope/vim-fugitive'
+
+call vundle#end()
+filetype plugin indent on
+
+SetColor my
