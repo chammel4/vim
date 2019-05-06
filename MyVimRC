@@ -1,11 +1,15 @@
 set autoindent
 set smartindent
-set tabstop=4 
+set tabstop=4
 set softtabstop=4
-set shiftwidth=4 
+set shiftwidth=4
 set nu
 set wildmenu
 set wildmode=full
+set relativenumber
+colorscheme torte
+
+
 "colo murphy
 " if has('gui_running')
 " 	set background=dark
@@ -14,21 +18,38 @@ set wildmode=full
 " 	colorscheme zenburn
 " endif
 
-call togglebg#map("<F5>")
+"call togglebg#map("<F5>")
 
 let g:python_highlight_all=1
+let g:ConqueTerm_Color = 2
+let g:conda_startup_msg_suppress = 1
 syntax on
 
+" python-mode params
+let g:pymode_run = 1
+let g:pymode_run_bind = '<leader>r'
+let g:pymode_rope_goto_definition_bind = '<C-c>g'
+let g:pymode_rope_rename_bind = '<C-r>rr'
+
+nnoremap <C-s> :source ~/.vimrc<cr>
 "type-specific params
 au BufNewFile,BufRead #.py
-    \ set tabstop=4 
+    \ set tabstop=4
     \ set softtabstop=4
-    \ set shiftwidth=4 
+    \ set shiftwidth=4
     \ set expandtab
     \ set textwidth = 79
     \ set fileformat=unix
     \ set encoding=utf-8
-au FileType python nnoremap <buffer> <F9> :exec 'w !python' shellescape(@%, 1)<cr>
+let gpymode_python = 'python3'
+au FileType python nnoremap <buffer> <F9> :exec 'w !python3' shellescape(@%, 1)<cr>
+au FileType python nnoremap <C-/> <S-I><#>
+hi pythonSelf ctermfg=68 guifg=#5f87d7 cterm=bold gui=bold
+let g:ale_linters = {'rust': ['rustc']}
+let g:ale_completion_enabled = 0
+let g:ale_on_text_changed = 1
+let g:ale_sign_column_always = 1
+
 
 au BufNewFile,BufRead #.js, #.html, #.css
     \ set tabstop=2
@@ -36,8 +57,9 @@ au BufNewFile,BufRead #.js, #.html, #.css
     \ set shiftwidth=2
 
 "Flagging Unnecessary Whitespace
-highlight BadWhitespace ctermbg=red guibg=darkred
+au BufRead,BufNewFile *.py,*.pyw highlight BadWhitespace ctermbg=red guibg=darkred
 au BufRead,BufNewFile *.py,*.pyw,*.c,*.h match BadWhitespace /\s\+$/
+let g:pymode_python = 'python3'
 
 "split navigations
 nnoremap <C-J> <C-W><C-j>
@@ -50,7 +72,7 @@ set splitright
 "split resizing
 nnoremap <lt> <C-W><lt>
 "nnoremap > <C-W><gt>
- 
+
 "code folding
 set foldmethod=indent
 set foldlevel=99
@@ -61,10 +83,12 @@ let g:SimpylFold_docstring_preview=1
 "YouCompleteMe params
 let g:ycm_autoclose_preview_window_after_completion=1
 map <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
-
-
+let g:pymode_lint_checkers = ['pep8']
+" supertab options
+let g:SuperTabDefaultCompletionType "<c-n>"
+let g:SuperTabContextDefaultCompletionType "<c-n>"
 set nocompatible
-filetype on 
+filetype on
 
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
@@ -73,13 +97,26 @@ set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
-Plugin 'Valloric/YouCompleteMe'
+" Plugin 'Valloric/YouCompleteMe'
+Plugin 'ncm2/ncm2'
+Plugin 'ervandew/supertab'
+Plugin 'palantir/python-language-server'
+Plugin 'prabirshrestha/async.vim'
+Plugin 'prabirshrestha/vim-lsp'
+Plugin 'prabirshrestha/asyncomplete.vim'
+Plugin 'prabirshrestha/asyncomplete-lsp.vim'
+Plugin 'maralla/completor.vim'
+Plugin 'ryanolsonx/vim-lsp-python'
+Plugin 'ludovicchabant/vim-gutentags'
+Plugin 'tpope/vim-surround'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'Conque-GDB'
 Plugin 'scrooloose/NERDtree'
 Plugin 'tmhedberg/SimpylFold'
 Plugin 'vim-scripts/indentpython.vim'
-Plugin 'vim-syntastic/syntastic'
+"Plugin 'vim-syntastic/syntastic'
+Plugin 'w0rp/ale'
+Plugin 'davidhalter/jedi-vim'
 Plugin 'nvie/vim-flake8'
 Plugin 'kien/ctrlp.vim'
 Plugin 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
@@ -87,8 +124,29 @@ Plugin 'jnurmine/Zenburn'
 Plugin 'altercation/vim-colors-solarized'
 Plugin 'vim-python/python-syntax'
 Plugin 'tpope/vim-fugitive'
+Plugin 'jeetsukumaran/vim-pythonsense'
+Plugin 'cjrh/vim-conda'
+Plugin 'SQLComplete.vim'
+Plugin 'python-mode/python-mode'
+"Plugin 'cosminadrianpopescu/vim-sql-workbench'
+" Plugin 'hdima/python-syntax'
+" Plugin 'prettier/vim-prettier', {
+" 	\ 'do': 'yarn install',
+" 	\ 'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphq1', 'markdown', 'vue', 'yaml', 'html']}
 
 call vundle#end()
 filetype plugin indent on
 
-SetColor my
+if executable('pyls')
+    " pip install python-language-server
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'pyls',
+        \ 'cmd': {server_info->['pyls']},
+        \ 'whitelist': ['python'],
+        \ })
+endif
+
+:set statusline+=%{gutentags#statusline()}
+highlight Pmenu ctermbg=blue guibg=blue
+"SetColor my
+
