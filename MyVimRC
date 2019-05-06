@@ -20,6 +20,8 @@ colorscheme torte
 
 "call togglebg#map("<F5>")
 
+set pythonthreedll=python37.dll
+
 let g:python_highlight_all=1
 let g:ConqueTerm_Color = 2
 let g:conda_startup_msg_suppress = 1
