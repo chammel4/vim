@@ -148,5 +148,7 @@ if executable('pyls')
         \ })
 endif
 
-:set statusline+=%{gutentags#statusline()}
+set statusline+=%{gutentags#statusline()}
+set statusline+=%{FugitiveStatusLine())
+
 highlight Pmenu ctermbg=blue guibg=blue
