@@ -13,7 +13,7 @@ set laststatus=2
 set timeoutlen=1000
 set ttimeoutlen=100
 colorscheme torte
-
+set guifont=Consolas:h9
 
 "colo murphy
 " if has('gui_running')
@@ -37,6 +37,12 @@ let g:pymode_run = 1
 let g:pymode_run_bind = '<leader>r'
 let g:pymode_rope_goto_definition_bind = '<C-c>g'
 let g:pymode_rope_rename_bind = '<C-r>rr'
+
+" PLC params
+au BufNewFile,BufRead *.EXP set filetype=stplc
+au BufNewFile,BufRead *.st set filetype=stplc
+let rst_syntax_code_list = ['vim']
+"syntax syntax-highlighting coloring
 
 "type-specific params
 au BufNewFile,BufRead #.py
@@ -173,6 +179,7 @@ Plugin 'jeetsukumaran/vim-pythonsense'
 Plugin 'cjrh/vim-conda'
 Plugin 'SQLComplete.vim'
 Plugin 'python-mode/python-mode'
+Plugin 'tompinkas/st-syntax.vim'
 "Plugin 'cosminadrianpopescu/vim-sql-workbench'
 " Plugin 'hdima/python-syntax'
 " Plugin 'prettier/vim-prettier', {
