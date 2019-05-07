@@ -92,10 +92,19 @@ let g:SuperTabContextDefaultCompletionType "<c-n>"
 set nocompatible
 filetype on
 
+"
+"NERDtree 
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+" au User NERDtreeInit let b:NERDTreeRoot = b:NERDTree.root
 
-set rtp+=~/.vim/bundle/Vundle.vim
+if (has('win32') || has('win64'))
+	set rtp+=$HOME/_vimfiles/bundle/Vundle.vim
+else
+	set rtp+=$HOME/.vim/bundle/Vundle.vim
+endif
+" echo VundlePath
+" set rtp+=VundlePath
 call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
@@ -149,6 +158,6 @@ if executable('pyls')
 endif
 
 set statusline+=%{gutentags#statusline()}
-set statusline+=%{FugitiveStatusLine())
+set statusline+=%{FugitiveStatusLine()}
 
 highlight Pmenu ctermbg=blue guibg=blue
