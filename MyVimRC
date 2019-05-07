@@ -7,6 +7,11 @@ set nu
 set wildmenu
 set wildmode=full
 set relativenumber
+set bs=indent,eol,start
+set statusline=%f
+set laststatus=2
+set timeoutlen=1000
+set ttimeoutlen=100
 colorscheme torte
 
 
@@ -33,7 +38,6 @@ let g:pymode_run_bind = '<leader>r'
 let g:pymode_rope_goto_definition_bind = '<C-c>g'
 let g:pymode_rope_rename_bind = '<C-r>rr'
 
-nnoremap <C-s> :source ~/.vimrc<cr>
 "type-specific params
 au BufNewFile,BufRead #.py
     \ set tabstop=4
@@ -79,33 +83,62 @@ nnoremap <lt> <C-W><lt>
 set foldmethod=indent
 set foldlevel=99
 nnoremap <space> za
-
 let g:SimpylFold_docstring_preview=1
 
 "YouCompleteMe params
 let g:ycm_autoclose_preview_window_after_completion=1
 map <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
 let g:pymode_lint_checkers = ['pep8']
+
 " supertab options
-let g:SuperTabDefaultCompletionType "<c-n>"
-let g:SuperTabContextDefaultCompletionType "<c-n>"
+let g:SuperTabDefaultCompletionType = "<c-n>"
+let g:SuperTabContextDefaultCompletionType = "<c-n>"
 set nocompatible
 filetype on
 
-"
 "NERDtree 
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 " au User NERDtreeInit let b:NERDTreeRoot = b:NERDTree.root
 
+"GLOBAL MAPPINGS
+imap hh <esc>
+" bubble single lines
+function! BubbleSingleUp()
+	silent norm ddkP
+endfunction
+function! BubbleSingleDown()
+	silent norm ddp
+endfunction
+nmap <C-Up> :call BubbleSingleUp()<cr>
+nmap <C-Down> :call BubbleSingleDown()<cr>
+" bubble multiple lines
+function! BubbleMultUp()
+	norm '<dv'>kP
+endfunction
+function! BubbleMultDown()
+	silent norm '<`<dv`>p
+	norm `[V`]
+endfunction
+vmap <C-Up> :<backspace><backspace><backspace><backspace><backspace>norm '<d'>kP`[V`]<cr>
+vmap <C-Down> :<backspace><backspace><backspace><backspace><backspace>norm '<d'>p`[V`]<cr>
+
+
 if (has('win32') || has('win64'))
-	set rtp+=$HOME/_vimfiles/bundle/Vundle.vim
+	set rtp+=$HOME\vimfiles\bundle\Vundle.vim
+	let VundlePath = '$HOME\vimfiles\bundle\'
+	noremap <C-s> :source $HOME\_vimrc<cr>
 else
 	set rtp+=$HOME/.vim/bundle/Vundle.vim
+	let VundlePath = '$HOME/.vim/bundle/Vundle.vim'
+	nnoremap <C-s> :source $HOME/.vimrc<cr>
 endif
 " echo VundlePath
 " set rtp+=VundlePath
-call vundle#begin()
+
+" let g:vundle_default_git_proto="http"
+
+call vundle#begin(VundlePath)
 
 Plugin 'VundleVim/Vundle.vim'
 " Plugin 'Valloric/YouCompleteMe'
@@ -159,6 +192,6 @@ if executable('pyls')
 endif
 
 set statusline+=%{gutentags#statusline()}
-set statusline+=%{FugitiveStatusLine()}
+set statusline+=%{fugitive#statusline()}
 
 highlight Pmenu ctermbg=blue guibg=blue
