@@ -13,7 +13,27 @@ set laststatus=2
 set timeoutlen=1000
 set ttimeoutlen=100
 colorscheme torte
-set guifont=Consolas:h9
+set guifont=Consolas:h12
+" au GUIEnter * simalt ~x
+function! SetTextSize()
+	set fullscreen
+	" set lines=999
+	" set columns=999
+	sleep 1000m
+	redraw!
+	echo &lines
+	" sleep 3000m
+	let newSize=&lines/60.0*12.0
+	exec "set guifont=Consolas:h" . string(float2nr(ceil(newSize)))
+	" echo string(float2nr(ceil(newSize)))
+	set nofullscreen
+	redraw!
+	set lines=60
+	set columns=120
+	echo newSize
+	sleep
+endfunction
+au GUIEnter * :call SetTextSize()<cr>
 
 "colo murphy
 " if has('gui_running')
@@ -136,7 +156,7 @@ if (has('win32') || has('win64'))
 	noremap <C-s> :source $HOME\_vimrc<cr>
 else
 	set rtp+=$HOME/.vim/bundle/Vundle.vim
-	let VundlePath = '$HOME/.vim/bundle/Vundle.vim'
+	let VundlePath = '$HOME/.vim/bundle/'
 	nnoremap <C-s> :source $HOME/.vimrc<cr>
 endif
 " echo VundlePath
