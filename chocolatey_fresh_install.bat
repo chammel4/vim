@@ -4,5 +4,12 @@ choco install chocolateygui -fy
 choco install ctags -fy
 choco install curl -fy
 choco install git -fy
+choco install python -fy
+python -m pip install --upgrade pip
+python -m pip install python-language-server
+choco install anaconda3 -fy
 choco install vim -fy
 choco install sourcetree -fy
+
+cd %USERPROFILE%
+git clone https://github.com/VundleVim/Vundle.vim.git:q %USERPROFILE%/vimfiles/bundle/Vundle.vim
