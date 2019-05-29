@@ -9,7 +9,9 @@ python -m pip install --upgrade pip
 python -m pip install python-language-server
 choco install anaconda3 -fy
 choco install vim -fy
+choco install cmake -fy
 choco install sourcetree -fy
+choco install sql-server-management-studio -fy
 
 cd %USERPROFILE%
 git clone https://github.com/VundleVim/Vundle.vim.git:q %USERPROFILE%/vimfiles/bundle/Vundle.vim
