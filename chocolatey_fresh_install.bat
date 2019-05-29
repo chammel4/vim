@@ -12,6 +12,7 @@ choco install vim -fy
 choco install cmake -fy
 choco install sourcetree -fy
 choco install sql-server-management-studio -fy
+choco install putty -fy
 
 cd %USERPROFILE%
 git clone https://github.com/VundleVim/Vundle.vim.git:q %USERPROFILE%/vimfiles/bundle/Vundle.vim
