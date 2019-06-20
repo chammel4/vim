@@ -14,6 +14,7 @@ choco install sourcetree -fy
 choco install sql-server-management-studio -fy
 choco install putty -fy
 choco install filezilla -fy
+choco install greenshot -fy
 
 cd %USERPROFILE%
 git clone https://github.com/VundleVim/Vundle.vim.git:q %USERPROFILE%/vimfiles/bundle/Vundle.vim
