@@ -102,6 +102,56 @@ nnoremap <C-L> <C-W><C-l>
 nnoremap <C-H> <C-W><C-h>
 set splitbelow
 set splitright
+nnoremap <C-W>h :call MoveWindow("left")<CR>
+nnoremap <C-W>l :call MoveWindow("right")<CR>
+nnoremap <C-W>k :call MoveWindow("up")<CR>
+nnoremap <C-W>j :call MoveWindow("down")<CR>
+
+" nnoremap <silent> GG :echo screencol()<CR>
+
+function! MoveWindow(direction) abort
+	let l:currBuf = bufnr("%")
+	let l:currWin = winnr()
+
+	if (a:direction=="left")
+		:wincmd h
+		let l:newBuf = bufnr("%")
+		let l:newWin = winnr()
+
+		execute "b". l:currBuf
+		execute l:currWin. "wincmd w"
+		execute "b". l:newBuf
+		execute l:newWin. "wincmd w"
+	elseif (a:direction=="right")
+		:wincmd l
+		let l:newBuf = bufnr("%")
+		let l:newWin = winnr()
+
+		execute "b". l:currBuf
+		execute l:currWin. "wincmd w"
+		execute "b". l:newBuf
+		execute l:newWin. "wincmd w"
+	elseif (a:direction=="up")
+		:wincmd k
+		let l:newBuf = bufnr("%")
+		let l:newWin = winnr()
+
+		execute "b". l:currBuf
+		execute l:currWin. "wincmd w"
+		execute "b". l:newBuf
+		execute l:newWin. "wincmd w"
+	elseif (a:direction=="down")
+		:wincmd j
+		let l:newBuf = bufnr("%")
+		let l:newWin = winnr()
+
+		execute "b". l:currBuf
+		execute l:currWin. "wincmd w"
+		execute "b". l:newBuf
+		execute l:newWin. "wincmd w"
+	endif
+endfunction
+
 
 "split resizing
 nnoremap <lt> <C-W><lt>
@@ -202,6 +252,8 @@ Plugin 'altercation/vim-colors-solarized'
 "Plugin 'vim-python/python-syntax'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-rhubarb'
+Plugin 'tpope/vim-unimpaired'
+Plugin 'whiteinge/diffconflicts'
 "Plugin 'jeetsukumaran/vim-pythonsense'
 Plugin 'cjrh/vim-conda'
 Plugin 'SQLComplete.vim'
