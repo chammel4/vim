@@ -203,7 +203,13 @@ function! BubbleMultDown()
 endfunction
 vmap <C-Up> :<backspace><backspace><backspace><backspace><backspace>norm '<d'>kP`[V`]<cr>
 vmap <C-Down> :<backspace><backspace><backspace><backspace><backspace>norm '<d'>p`[V`]<cr>
+" delete without yanking
+nnoremap <leader>d "_d
+vnoremap <leader>d "_d
 
+" replace currently selected text with default register
+" without yanking it
+vnoremap <leader>p "_dP
 
 if (has('win32') || has('win64'))
 	set rtp+=$HOME\vimfiles\bundle\Vundle.vim
