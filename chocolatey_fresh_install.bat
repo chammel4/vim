@@ -44,6 +44,10 @@ cd %USERPROFILE%
 if not exist %userprofile%\vimfiles\bundle\Vundle.vim (
 	git clone https://github.com/VundleVim/Vundle.vim.git %USERPROFILE%\vimfiles\bundle\Vundle.vim
 )
+
+git config --global user.email "chammel4@gmail.com"
+git config --global user.name "Chris Hammel"
+
 gvim +PluginInstall +qall
 PAUSE 2>nul
 EXIT /B 0
