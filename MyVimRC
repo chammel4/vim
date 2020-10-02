@@ -37,13 +37,13 @@ function! SetTextSize()
 endfunction
 
 function! EchoIfDebug(msg)
-	if exists("s:debug")
+	if exists("s:debug") && s:debug == 1
 		echo a:msg
 	endif
 endfunction
 
 function! Resize(direction, changeStr)
-	let s:debug=1
+	let s:debug=0
 
 	if exists("g:NERDTree") && g:NERDTree.IsOpen()
 
@@ -64,7 +64,7 @@ function! Resize(direction, changeStr)
 			if a:direction ==? 'v'
 				let l:direction = 'vertical'
 			else
-				echo a:direction . 'is not a valid direction, must be "h" or "v"'
+				call EchoIfDebug(a:direction . 'is not a valid direction, must be "h" or "v"')
 				return
 			endif
 		endif
@@ -98,13 +98,13 @@ function! Resize(direction, changeStr)
 				call EchoIfDebug('"change to" requested')
 				let l:resizeType = 'change_to'
 				let l:changeAmt = str2float(l:changeStr)
-				echo "l:changeStr = " . l:changeStr . "   l:changeAmt = " . string(l:changeAmt)
+				call EchoIfDebug("l:changeStr = " . l:changeStr . " l:changeAmt = " . string(l:changeAmt))
 			endif
 		endif
 		if l:direction == 'horizontal'
-			echo "l:changeAmt = " . string(l:changeAmt)
+			call EchoIfDebug("l:changeAmt = " . string(l:changeAmt))
 			let l:new_width = str2float(winwidth(0)) * l:changeAmt
-			echo "immediate l:new_width: " . string(l:new_width)
+			call EchoIfDebug("immediate l:new_width: " . string(l:new_width))
 			let l:new_width = float2nr(round(l:new_width))
 			if exists("l:NERDTreeWidth")
 				let l:max_width = &columns - l:NERDTreeWidth
@@ -112,7 +112,7 @@ function! Resize(direction, changeStr)
 				let l:max_width = &columns
 			endif
 			if l:new_width > l:max_width
-				echo "Requested width (" . string(l:new_width) . ") greater
+				call EchoIfDebug("Requested width (" . string(l:new_width) . ") greater)
 							\ than max width (" . l:max_width . ")...setting
 							\ width to full window width"
 				let l:new_width = l:max_width
