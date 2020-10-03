@@ -12,9 +12,9 @@ set statusline=%f
 set laststatus=2
 set timeoutlen=1000
 set ttimeoutlen=100
-colorscheme torte
 set lines=60
 set columns=150
+set hlsearch
 set guifont=Consolas:h9
 " au GUIEnter * simalt ~x
 function! SetTextSize()
@@ -35,6 +35,116 @@ function! SetTextSize()
 	echo newSize
 	sleep
 endfunction
+
+function! EchoIfDebug(msg)
+	if exists("s:debug") && s:debug == 1
+		echo a:msg
+	endif
+endfunction
+
+function! Resize(direction, changeStr)
+	let s:debug=0
+
+	if exists("g:NERDTree") && g:NERDTree.IsOpen()
+
+		let l:NERDTreeWidth = winwidth(1)
+		call EchoIfDebug("NERDTreeWidth: " . l:NERDTreeWidth)
+	else
+
+		call EchoIfDebug("NERDTree not found")
+	endif
+
+	if exists("l:changeStr")
+		unlet l:changeStr
+	endif
+	try
+		if a:direction ==? 'h'
+			let l:direction = 'horizontal'
+		else
+			if a:direction ==? 'v'
+				let l:direction = 'vertical'
+			else
+				call EchoIfDebug(a:direction . 'is not a valid direction, must be "h" or "v"')
+				return
+			endif
+		endif
+		call EchoIfDebug("Resize called with direction: '" . l:direction . "', input: '" . a:changeStr . "'")
+		let l:changeStr = matchstr(a:changeStr, '^[-+]*[.0-9]*')
+		if !exists("l:changeStr")
+			throw "ERROR: size change string '" . a:changeStr . "' is not valid"
+		else
+			if l:changeStr == ''
+				throw "size change string '" . a:changeStr . "' is not valid"
+			else
+				let l:echo_string = "parsed l:changeStr = '" . l:changeStr . "'"
+				call EchoIfDebug(l:echo_string)
+			endif
+		endif
+		if l:changeStr =~ '-.*'
+			call EchoIfDebug('"decrease" requested')
+			let l:resizeType = 'decrease_by'
+			call EchoIfDebug("l:changeStr strpart: " . strpart(l:changeStr, 1))
+			let l:changeAmt = 1 - str2float(strpart(l:changeStr, 1))
+			if l:changeAmt < 0
+				let l:changeAmt = 0
+			endif
+		else
+			if l:changeStr =~ '+.*'
+				call EchoIfDebug('"increase" requested')
+				let l:resizeType = 'increase_by'
+				call EchoIfDebug("l:changeStr strpart: " . strpart(l:changeStr, 1))
+				let l:changeAmt = 1.0 + str2float(strpart(l:changeStr, 1))
+			else
+				call EchoIfDebug('"change to" requested')
+				let l:resizeType = 'change_to'
+				let l:changeAmt = str2float(l:changeStr)
+				call EchoIfDebug("l:changeStr = " . l:changeStr . " l:changeAmt = " . string(l:changeAmt))
+			endif
+		endif
+		if l:direction == 'horizontal'
+			call EchoIfDebug("l:changeAmt = " . string(l:changeAmt))
+			let l:new_width = str2float(winwidth(0)) * l:changeAmt
+			call EchoIfDebug("immediate l:new_width: " . string(l:new_width))
+			let l:new_width = float2nr(round(l:new_width))
+			if exists("l:NERDTreeWidth")
+				let l:max_width = &columns - l:NERDTreeWidth
+			else
+				let l:max_width = &columns
+			endif
+			if l:new_width > l:max_width
+				call EchoIfDebug("Requested width (" . string(l:new_width) . ") greater)
+							\ than max width (" . l:max_width . ")...setting
+							\ width to full window width"
+				let l:new_width = l:max_width
+			endif
+			call EchoIfDebug("current width: " . winwidth(0) . "    new width: " . l:new_width)
+			call EchoIfDebug("vertical resize " . l:new_width)
+			execute "vertical resize " . l:new_width
+		else
+			let l:new_height = winheight(0) * l:changeAmt
+			let l:new_height = float2nr(round(l:new_height))
+			if l:new_height > &lines
+				let l:new_hight = &lines
+			endif
+			call EchoIfDebug("current height: " . winheight(0) . "    new height: " . l:new_height)
+			call EchoIfDebug("resize " . l:new_height)
+			execute "resize " . l:new_height
+		endif
+
+	if exists("l:NERDTreeWidth")
+		let g:NERDTreeWinSize=l:NERDTreeWidth
+	endif
+
+	catch
+		echo "Exception at line " . v:lnum . ": " . v:exception
+	endtry
+
+endfunction
+
+:command! -nargs=+ Resize : call Resize(<f-args>)
+:command! -nargs=1 HResize : call Resize('h', <f-args>)
+:command! -nargs=1 VResize : call Resize('v', <f-args>)
+
 "au GUIEnter * :call SetTextSize()<cr>
 
 "colo murphy
@@ -66,6 +176,9 @@ au BufNewFile,BufRead *.st set filetype=stplc
 au BufNewFile,BufRead *.TcPOU set filetype=stplc
 let rst_syntax_code_list = ['vim']
 "syntax syntax-highlighting coloring
+
+" g-code
+au BufNewFile,BufRead *.nc set filetype=ngc
 
 "type-specific params
 au BufNewFile,BufRead #.py
@@ -176,7 +289,6 @@ filetype on
 
 "NERDtree 
 autocmd StdinReadPre * let s:std_in=1
-autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 " au User NERDtreeInit let b:NERDTreeRoot = b:NERDTree.root
 
 "GLOBAL MAPPINGS
@@ -271,9 +383,45 @@ Plugin 'sellout/Structured-Text'
 " Plugin 'prettier/vim-prettier', {
 " 	\ 'do': 'yarn install',
 " 	\ 'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphq1', 'markdown', 'vue', 'yaml', 'html']}
+Plugin 'gregjurman/vim-nc'
+Plugin 'tomasiser/vim-code-dark'
+Plugin 'mhinz/vim-startify'
 
 call vundle#end()
 filetype plugin indent on
+
+"STARTIFY
+  function! s:list_commits()
+    let git = 'git -C ~/repo'
+    let commits = systemlist(git .' log --oneline | head -n10')
+    let git = 'G'. git[1:]
+    return map(commits, '{"line": matchstr(v:val, "\\s\\zs.*"), "cmd": "'. git .' show ". matchstr(v:val, "^\\x\\+") }')
+  endfunction
+
+  let g:startify_bookmarks = [
+		\ { 'c': expand('<sfile>') },
+		\ ]
+		
+
+  let g:startify_lists = [
+        \ { 'header': ['   MRU'],            'type': 'files' },
+        \ { 'header': ['   MRU '. getcwd()], 'type': 'dir' },
+   	    \ { 'header': ['   Bookmarks'],      'type': 'bookmarks' },
+        \ { 'header': ['   Sessions'],       'type': 'sessions' },
+        \ { 'header': ['   Commits'],        'type': function('s:list_commits') },
+        \ ]
+
+  let g:startify_enable_unsafe=1
+" let g:startify_lists = [
+" 	  \ { 'type': 'files',     'header': ['   MRU']            },
+" 	  \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
+" 	  \ { 'type': 'sessions',  'header': ['   Sessions']       },
+" 	  \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
+" 	  \ { 'type': 'commands',  'header': ['   Commands']       },
+" 	  \ ]
+
+let g:codedark_term256=1
+colorscheme codedark
 
 if executable('pyls')
     " pip install python-language-server
@@ -286,6 +434,14 @@ endif
 
 set statusline+=%{gutentags#statusline()}
 set statusline+=%{fugitive#statusline()}
+
+let g:NERDTreeWinSize=31
+
+autocmd VimEnter * 
+	\ if argc() == 0 && !exists("s:std_in")
+	\ | Startify
+	\ | NERDTree
+	\ |endif
 
 highlight Pmenu ctermbg=blue guibg=blue
 set diffopt +=iwhite
