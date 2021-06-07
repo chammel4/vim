@@ -16,6 +16,7 @@ set lines=60
 set columns=150
 set hlsearch
 set guifont=Consolas:h9
+set colorcolumn=80
 " au GUIEnter * simalt ~x
 function! SetTextSize()
 	set fullscreen
@@ -42,7 +43,13 @@ function! EchoIfDebug(msg)
 	endif
 endfunction
 
+"commands are:
+"Resize <h/v (horizontal or vertical)> <percentage of current (1.0 = same
+"size)>
+"HResize <size>
+"VResize <size>
 function! Resize(direction, changeStr)
+	"set s:debug to 1 to print debug messages!
 	let s:debug=0
 
 	if exists("g:NERDTree") && g:NERDTree.IsOpen()
@@ -163,6 +170,16 @@ let g:python_highlight_all=1
 let g:ConqueTerm_Color = 2
 let g:conda_startup_msg_suppress = 1
 syntax on
+
+"python with virtualenv support
+py << EOF
+import os
+import sys
+if 'VIRTUAL_ENV' in os.environ:
+  project_base_dir = os.environ['VIRTUAL_ENV']
+  activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
+  execfile(activate_this, dict(__file__=activate_this))
+EOF
 
 " python-mode params
 let g:pymode_run = 1
@@ -386,9 +403,66 @@ Plugin 'sellout/Structured-Text'
 Plugin 'gregjurman/vim-nc'
 Plugin 'tomasiser/vim-code-dark'
 Plugin 'mhinz/vim-startify'
+Plugin 'fatih/vim-go'
+Plugin 'alvan/vim-closetag'
 
 call vundle#end()
 filetype plugin indent on
+
+"FAITH/VIM-GO SETTINGS
+let g:go_def_mode='gopls'
+let g:go_info_mode='gopls'
+
+"ALVAN/VIM-CLOSING SETTINGS
+let g:closetag_filenames = '*.html,*.xhtml,*.phtml,*.xml'
+
+" filenames like *.xml, *.html, *.xhtml, ...
+" These are the file extensions where this plugin is enabled.
+"
+let g:closetag_filenames = '*.html,*.xhtml,*.phtml'
+
+" filenames like *.xml, *.xhtml, ...
+" This will make the list of non-closing tags self-closing in the specified files.
+"
+let g:closetag_xhtml_filenames = '*.xhtml,*.jsx'
+
+" filetypes like xml, html, xhtml, ...
+" These are the file types where this plugin is enabled.
+"
+let g:closetag_filetypes = 'html,xhtml,phtml'
+
+" filetypes like xml, xhtml, ...
+" This will make the list of non-closing tags self-closing in the specified files.
+"
+let g:closetag_xhtml_filetypes = 'xhtml,jsx'
+
+" integer value [0|1]
+" This will make the list of non-closing tags case-sensitive (e.g. `<Link>` will be closed while `<link>` won't.)
+"
+let g:closetag_emptyTags_caseSensitive = 1
+
+" dict
+" Disables auto-close if not in a "valid" region (based on filetype)
+"
+let g:closetag_regions = {
+    \ 'typescript.tsx': 'jsxRegion,tsxRegion',
+    \ 'javascript.jsx': 'jsxRegion',
+    \ 'typescriptreact': 'jsxRegion,tsxRegion',
+    \ 'javascriptreact': 'jsxRegion',
+    \ }
+
+" Shortcut for closing tags, default is '>'
+"
+let g:closetag_shortcut = '>'
+
+" Add > at current position without closing the current tag, default is ''
+"
+let g:closetag_close_shortcut = '<leader>>'
+
+
+" python from powerline.vim import setup as powerline_setup
+" python powerline_setup()
+" python del powerline_setup
 
 "STARTIFY
   function! s:list_commits()
@@ -411,14 +485,15 @@ filetype plugin indent on
         \ { 'header': ['   Commits'],        'type': function('s:list_commits') },
         \ ]
 
+  let g:startify_session_before_save = [
+		\ 'echo "Cleaning up before saving..."',
+		\ 'silent! NERDTreeTabsClose'
+		\ ]
   let g:startify_enable_unsafe=1
-" let g:startify_lists = [
-" 	  \ { 'type': 'files',     'header': ['   MRU']            },
-" 	  \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
-" 	  \ { 'type': 'sessions',  'header': ['   Sessions']       },
-" 	  \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
-" 	  \ { 'type': 'commands',  'header': ['   Commands']       },
-" 	  \ ]
+  let NERDTreeHijackNetrw = 0
+  set sessionoptions-=blank
+
+
 
 let g:codedark_term256=1
 colorscheme codedark
@@ -441,6 +516,7 @@ autocmd VimEnter *
 	\ if argc() == 0 && !exists("s:std_in")
 	\ | Startify
 	\ | NERDTree
+	\ | wincmd w
 	\ |endif
 
 highlight Pmenu ctermbg=blue guibg=blue
