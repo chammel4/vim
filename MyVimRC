@@ -166,7 +166,7 @@ endfunction
 
 "call togglebg#map("<F5>")
 
-set pythonthreedll=python37.dll
+set pythonthreedll=python311.dll
 
 let g:python_highlight_all=1
 let g:ConqueTerm_Color = 2
