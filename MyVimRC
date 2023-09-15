@@ -17,6 +17,8 @@ set columns=150
 set hlsearch
 set guifont=Consolas:h9
 set colorcolumn=80
+set shell=pwsh
+
 " au GUIEnter * simalt ~x
 function! SetTextSize()
 	set fullscreen
