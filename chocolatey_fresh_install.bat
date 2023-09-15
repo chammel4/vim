@@ -28,7 +28,7 @@ if "%OptionText%" == "-" (
 choco install ctags %OptionText%
 choco install curl %OptionText%
 choco install git %OptionText%
-choco install python --version 3.8 %OptionText%
+choco install python --version 3.11 %OptionText%
 python -m pip install --upgrade pip
 python -m pip install python-language-server
 choco install vim %OptionText%
