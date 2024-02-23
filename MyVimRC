@@ -15,9 +15,9 @@ set ttimeoutlen=100
 set lines=60
 set columns=150
 set hlsearch
-set guifont=Consolas:h12
+set guifont=Consolas:h10
 set colorcolumn=80
-" set shell=pwsh
+" set shell=cmd
 
 " au GUIEnter * simalt ~x
 function! SetTextSize()
@@ -346,12 +346,12 @@ if (has('win32') || has('win64'))
 	set rtp+=$HOME\vimfiles\bundle\Vundle.vim
 	let VundlePath = '$HOME\vimfiles\bundle\'
 	noremap <C-s> :source $HOME\_vimrc<cr>
-	au FileType python nnoremap <buffer> <F5> :exec 'w !python' shellescape(@%, 1)<cr>
+	au FileType python nnoremap <buffer> <F9> :exec 'w !python' shellescape(@%, 1)<cr>
 else
 	set rtp+=$HOME/.vim/bundle/Vundle.vim
 	let VundlePath = '$HOME/.vim/bundle/'
 	nnoremap <C-s> :source $HOME/.vimrc<cr>
-	au FileType python nnoremap <buffer> <F5> :exec 'w !python3' shellescape(@%, 1)<cr>
+	au FileType python nnoremap <buffer> <F9> :exec 'w !python3' shellescape(@%, 1)<cr>
 endif
 " echo VundlePath
 " set rtp+=VundlePath
