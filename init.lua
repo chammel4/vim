@@ -326,14 +326,14 @@ require("lazy").setup({
 
 			-- Document existing key chains
 			spec = {
-				{ "<leader>c", group = "[C]ode", mode = { "n", "x" } },
+				{ "<leader>c", group = "[C]ode/[C]make", mode = { "n", "x" } },
 				{ "<leader>ct", group = "Build [T]ype", mode = { "n" } },
 				{ "<leader>cb", group = "[B]uild", mode = { "n" } },
 				{ "<leader>d", group = "[D]ocument" },
 				{ "<leader>r", group = "[R]ename" },
 				{ "<leader>s", group = "[S]earch" },
 				{ "<leader>w", group = "[W]orkspace" },
-				{ "<leader>t", group = "[T]oggle" },
+				{ "<leader>tr", group = "[R]un" },
 				{ "<leader>h", group = "Git [H]unk", mode = { "n", "v" } },
 			},
 		},
@@ -1074,6 +1074,24 @@ require("neotest").setup({
 		require("neotest-gtest").setup({}),
 		-- require("vim-gtest"),
 	},
+	filter_dirs = { ".git", "_deps" },
+	-- vim.api.nvim_set_keymap('n', '<leader>ts', neotest.summary, { noremap = true, silent = true, desc = '[S]ummary' })
+	vim.keymap.set("n", "<leader>ts", function()
+		require("neotest").summary.toggle()
+	end, { noremap = true, silent = true, desc = "[S]ummary" }),
+	vim.keymap.set(
+		"n",
+		"<leader>tr.",
+		":Neotest run<CR>",
+		{ noremap = true, silent = true, desc = "[.] (under cursor)" }
+	),
+	vim.keymap.set("n", "<leader>trf", function()
+		require("neotest").run.run(vim.fn.expand("%"))
+	end, { noremap = true, silent = true, desc = "[F]ile" }),
+	vim.keymap.set("n", "<leader>trd", function()
+		require("neotest").run.run(vim.fn.getcwd())
+	end, { noremap = true, silent = true, desc = "[D]irectory" }),
+	vim.keymap.set("n", "<leader>trl", ":Neotest run last<CR>", { noremap = true, silent = true, desc = "[L]ast" }),
 })
 
 require("nvim-treesitter.configs").setup({
@@ -1094,6 +1112,8 @@ function NumberToggle()
 end
 
 vim.api.nvim_set_keymap("n", "<leader>nr", ":lua NumberToggle()<CR>", { noremap = true, silent = true })
+
+-- CMake Bindings
 
 -- Keybinding to configure the project with CMake
 vim.api.nvim_set_keymap(
@@ -1137,6 +1157,8 @@ vim.api.nvim_set_keymap(
 
 -- Keybinding for running make (if using Makefile)
 -- vim.api.nvim_set_keymap('n', '<leader>c', ':make -C build<CR>', { noremap = true, silent = true })
+
+-- Testing Bindings
 
 -- Enable LSP for C++ (clangd for example)
 require("lspconfig").clangd.setup({})
