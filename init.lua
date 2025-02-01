@@ -715,6 +715,9 @@ require("lazy").setup({
 					end,
 				},
 			})
+			require("lspconfig").cmake.setup({
+				on_attach = function(client, bufnr) end,
+			})
 		end,
 	},
 
