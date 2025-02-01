@@ -1167,7 +1167,7 @@ vim.api.nvim_set_keymap(
 require("lspconfig").clangd.setup({})
 
 -- Add vim-dispatch for async builds
-vim.api.nvim_set_keymap("n", "<leader>b", ":Dispatch cmake --build build<CR>", { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>b', ':Dispatch cmake --build build<CR>', { noremap = true, silent = true })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
