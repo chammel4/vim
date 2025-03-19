@@ -327,7 +327,7 @@ require("lazy").setup({
 			-- Document existing key chains
 			spec = {
 				{ "<leader>c", group = "[C]ode/[C]make", mode = { "n", "x" } },
-				{ "<leader>ct", group = "Build [T]ype", mode = { "n" } },
+				{ "<leader>co", group = "Build [O]ptions", mode = { "n" } },
 				{ "<leader>cb", group = "[B]uild", mode = { "n" } },
 				{ "<leader>d", group = "[D]ocument" },
 				{ "<leader>r", group = "[R]ename" },
@@ -636,7 +636,7 @@ require("lazy").setup({
 			local servers = {
 				clangd = {},
 				-- gopls = {},
-				-- pyright = {},
+				pyright = {},
 				rust_analyzer = {},
 				-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
 				--
@@ -680,7 +680,7 @@ require("lazy").setup({
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
 			require("mason-lspconfig").setup({
-				ensure_installed = { "clangd", "cmake" },
+				ensure_installed = { "clangd", "cmake", "pyright" },
 				automatic_installation = true,
 				handlers = {
 					function(server_name)
@@ -694,18 +694,25 @@ require("lazy").setup({
 							cmd = {
 								"clangd",
 								"--background-index",
+								"--suggest-missing-includes",
 								"--clang-tidy",
 								-- '--header-insertion',
 								-- '--completion_style=detailed',
 								"--function-arg-placeholders",
 								"--fallback-style=llvm",
+								"-Wsign-conversion",
 							},
 							init_options = {
 								usePlaceholders = true,
 								completeUnimported = true,
 								clangdFileStatus = true,
 							},
+							root_dir = require("lspconfig").util.root_pattern(
+								"compile_commands.json",
+								"CMakeLists.txt"
+							),
 						})
+						require("lspconfig").pyright.setup({})
 
 						-- require('lspconfig')[server_name].setup(server) {
 						--   -- init_options = {
@@ -720,6 +727,35 @@ require("lazy").setup({
 			})
 		end,
 	},
+	-- {
+	-- "mfussenegger/nvim-dap",
+	-- config = function()
+	--   local dap = require("dap")
+	--
+	--   dap.adapters.codelldb = {
+	--     type = "server",
+	--     port = 2008,
+	--     executable = {
+	--       command = vim.fn.stdpath("data") .. "/mason/bin/codelldb",
+	--       args = {"--port", "2008"},
+	--     },
+	--   }
+	--
+	--   dap.configurations.c {
+	--     {
+	--       name = "Launch with sudo",
+	--       type = "codelldb",
+	--       request = "launch",
+	--       program = function()
+	--         -- Use sudo when launching the program
+	--         return "sudo /path/to/your/executable"
+	--       end,
+	--       cwd = vim.fn.getcwd()
+	--       stopOnEntry = true,
+	--       args = {},
+	--     },
+	--   }
+	-- },
 
 	{ -- Autoformat
 		"stevearc/conform.nvim",
@@ -756,7 +792,7 @@ require("lazy").setup({
 			formatters_by_ft = {
 				lua = { "stylua" },
 				-- Conform can also run multiple formatters sequentially
-				-- python = { "isort", "black" },
+				python = { "isort", "black" },
 				--
 				-- You can use 'stop_after_first' to run the first available formatter from the list
 				-- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -831,13 +867,22 @@ require("lazy").setup({
 					-- Accept ([y]es) the completion.
 					--  This will auto-import if your LSP supports it.
 					--  This will expand snippets if the LSP sent a snippet.
+					-- ['<C-CR>'] = cmp.mapping.confirm { select = true },
+					-- ['<S-CR>'] = cmp.mapping.confirm { select = true },
 					["<C-y>"] = cmp.mapping.confirm({ select = true }),
+					["<S-Space>"] = cmp.mapping.confirm({ select = true }),
+
+					-- -- Modifying to use <C-CR> to accept completion instea of <C-y>, as C-y (with the far-right Ctrl button) sucks on Dvorak.
+					-- -- In Insert Mode, remap Ctrl+Enter to accept completion only (without adding a new line)
+					-- cmp.keymap.set_map( 0, 'i', '<C-CR>', 'pumvisible() ? "<C-y>" : "<C-CR>"', { noremap = true, expr = true }),
+					--
+					-- -- Optionally, keep Enter (<CR>) to create a new line only if completion isn't active
+					-- cmp.keymap.set_map(0, 'i', '<CR>', 'pumvisible() ? "<C-y>" : "<CR>"', { noremap = true, expr = true }),
 
 					-- If you prefer more traditional completion keymaps,
 					-- you can uncomment the following lines
-					--['<CR>'] = cmp.mapping.confirm { select = true },
-					--['<Tab>'] = cmp.mapping.select_next_item(),
-					--['<S-Tab>'] = cmp.mapping.select_prev_item(),
+					["<Tab>"] = cmp.mapping.select_next_item(),
+					["<S-Tab>"] = cmp.mapping.select_prev_item(),
 
 					-- Manually trigger a completion from nvim-cmp.
 					--  Generally you don't need this, because nvim-cmp will display
@@ -1117,31 +1162,121 @@ end
 vim.api.nvim_set_keymap("n", "<leader>nr", ":lua NumberToggle()<CR>", { noremap = true, silent = true })
 
 -- CMake Bindings
+vim.g.cmake_default_command_string =
+	":!cmake -S . -B build -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++"
+vim.g.cmake_build_type = "Debug"
+vim.g.cmake_unit_tests = "OFF"
+vim.g.cmake_export_compile_commands = 1
+
+function getCmakeFlags()
+	print("RUNNING getCmakeFlags")
+	local flag_string = ""
+
+	-- Build Type
+	if vim.g.cmake_build_type == "Debug" then
+		print("cmake Debug flag")
+
+		if flag_string ~= "" then
+			print('adding " " before CMAKE_BUILD_TYPE=Debug')
+			print("Before: " .. flag_string)
+			flag_string = flag_string .. " "
+			print("After: " .. flag_string)
+		end
+
+		flag_string = flag_string .. "-DCMAKE_BUILD_TYPE=Debug"
+	elseif vim.g.cmake_build_type == "Release" then
+		print("cmake Release flag")
+
+		if flag_string ~= "" then
+			print('adding " " before CMAKE_BUILD_TYPE=Release')
+			flag_string = flag_string .. " "
+		end
+
+		flag_string = flag_string .. "-DCMAKE_BUILD_TYPE=Release"
+	end
+
+	-- Export Compile Commands
+	if vim.g.cmake_export_compile_commands == 1 then
+		if flag_string ~= "" then
+			print('adding " " before CMAKE_EXPORT_COMPILE_COMMANDS=1')
+			flag_string = flag_string .. " "
+		end
+
+		flag_string = flag_string .. "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+	end
+
+	-- Unit Tests
+	if vim.g.cmake_unit_tests == "ON" then
+		print("cmake unit_tests flag ON")
+
+		if flag_string ~= "" then
+			print('adding " " before UNIT_TESTS=ON')
+			flag_string = flag_string .. " "
+		end
+
+		flag_string = flag_string .. "-DUNIT_TESTS=ON"
+	else
+		print("cmake unit_tests flag OFF")
+	end
+
+	return flag_string
+end
+
+function buildCmakeCommand()
+	print("RUNNING buildCmakeCommand")
+	local cmake_flags = getCmakeFlags()
+	local command_str = ""
+
+	if cmake_flags ~= "" then
+		command_str = vim.g.cmake_default_command_string .. " " .. cmake_flags
+	else
+		command_str = vim.g.cmake_default_command_string
+	end
+
+	return command_str
+end
+
+function runCmakeCommand()
+	print("RUNNING runCmakeCommand")
+	local cmd = buildCmakeCommand()
+	print("cmake command: " .. cmd)
+	vim.cmd(cmd)
+end
 
 -- Keybinding to configure the project with CMake
 vim.api.nvim_set_keymap(
 	"n",
 	"<leader>cm",
-	":!cmake -S . -B build<CR>",
+	--':!cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER=/usr/bin/clang++<CR>',
+	":lua runCmakeCommand()<CR>",
 	{ noremap = true, silent = true, desc = "[C]make [M]ake" }
 )
+
 vim.api.nvim_set_keymap(
 	"n",
-	"<leader>ce",
-	":!cmake . -DCMAKE_EXPORT_COMPILE_COMMANDS=1<CR>",
-	{ noremap = true, silent = true, desc = "[E]xport Compile Commands" }
-)
-vim.api.nvim_set_keymap(
-	"n",
-	"<leader>ctd",
-	":!cmake . -DCMAKE_BUILD_TYPE=Debug<CR>",
+	"<leader>cod",
+	":lua vim.g.cmake_build_type='Debug'<CR>",
 	{ noremap = true, silent = true, desc = "[D]ebug" }
 )
 vim.api.nvim_set_keymap(
 	"n",
-	"<leader>ctr",
-	":!cmake . -DCMAKE_BUILD_TYPE=Release<CR>",
+	"<leader>cor",
+	":lua vim.g.cmake_build_type='Release'<CR>",
 	{ noremap = true, silent = true, desc = "[R]elease" }
+)
+
+-- Keybinding to enable compilation of unit tests
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader>cou",
+	":lua vim.g.cmake_unit_tests='ON'<CR>",
+	{ noremap = true, silent = true, desc = "Enable [u]nit tests" }
+)
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader>coU",
+	":lua vim.g.cmake_unit_tests='OFF'<CR>",
+	{ noremap = true, silent = true, desc = "Disable [U]nit tests" }
 )
 
 -- Keybinding to build with CMake (assuming build directory exists)
@@ -1165,9 +1300,55 @@ vim.api.nvim_set_keymap(
 
 -- Enable LSP for C++ (clangd for example)
 require("lspconfig").clangd.setup({})
+require("lspconfig").marksman.setup({})
+
+-- Folds
+-- set default method to `indent`
+vim.opt.foldmethod = "indent"
+
+vim.api.nvim_create_autocmd("BufEnter", {
+	pattern = "*",
+	callback = function()
+		if vim.bo.filetype == "neo-tree" then
+			vim.opt.foldmethod = "manual"
+		end
+	end,
+})
+
+-- -- set custom fold text formattin
+-- -- Set fillchars for folding
+-- vim.opt.fillchars = { fold = '\\' }
+--
+-- -- Set foldtext to use a custom function
+-- vim.opt.foldtext = 'v:lua.CustomFoldText()'
+--
+-- -- Define the custom fold text function
+-- function _G.CustomFoldText()
+--     local indentation = vim.fn.indent(vim.v.foldstart - 1)
+--     local foldSize = 1 + vim.v.foldend - vim.v.foldstart
+--     local foldSizeStr = " " .. foldSize .. " lines "
+--     local foldLevelStr = string.rep("+--", vim.v.foldlevel)
+--     local expansionString = string.rep(" ", indentation)
+--     return expansionString .. foldLevelStr .. foldSizeStr
+-- end
 
 -- Add vim-dispatch for async builds
 -- vim.api.nvim_set_keymap('n', '<leader>b', ':Dispatch cmake --build build<CR>', { noremap = true, silent = true })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+vim.lsp.set_log_level("debug")
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "dap-float",
+	callback = function()
+		vim.api.nvim_buf_set_keymap(0, "n", "q", "close!", { noremap = true, silent = true })
+	end,
+})
+
+vim.api.nvim_set_keymap(
+	"n",
+	"<Leader>dw",
+	":lua require'dap.ui.widgets'.hover()<CR>",
+	{ noremap = true, silent = true }
+)
