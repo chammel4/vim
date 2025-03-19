@@ -1169,26 +1169,17 @@ vim.g.cmake_unit_tests = "OFF"
 vim.g.cmake_export_compile_commands = 1
 
 function getCmakeFlags()
-	print("RUNNING getCmakeFlags")
 	local flag_string = ""
 
 	-- Build Type
 	if vim.g.cmake_build_type == "Debug" then
-		print("cmake Debug flag")
-
 		if flag_string ~= "" then
-			print('adding " " before CMAKE_BUILD_TYPE=Debug')
-			print("Before: " .. flag_string)
 			flag_string = flag_string .. " "
-			print("After: " .. flag_string)
 		end
 
 		flag_string = flag_string .. "-DCMAKE_BUILD_TYPE=Debug"
 	elseif vim.g.cmake_build_type == "Release" then
-		print("cmake Release flag")
-
 		if flag_string ~= "" then
-			print('adding " " before CMAKE_BUILD_TYPE=Release')
 			flag_string = flag_string .. " "
 		end
 
@@ -1198,7 +1189,6 @@ function getCmakeFlags()
 	-- Export Compile Commands
 	if vim.g.cmake_export_compile_commands == 1 then
 		if flag_string ~= "" then
-			print('adding " " before CMAKE_EXPORT_COMPILE_COMMANDS=1')
 			flag_string = flag_string .. " "
 		end
 
@@ -1207,23 +1197,17 @@ function getCmakeFlags()
 
 	-- Unit Tests
 	if vim.g.cmake_unit_tests == "ON" then
-		print("cmake unit_tests flag ON")
-
 		if flag_string ~= "" then
-			print('adding " " before UNIT_TESTS=ON')
 			flag_string = flag_string .. " "
 		end
 
 		flag_string = flag_string .. "-DUNIT_TESTS=ON"
-	else
-		print("cmake unit_tests flag OFF")
 	end
 
 	return flag_string
 end
 
 function buildCmakeCommand()
-	print("RUNNING buildCmakeCommand")
 	local cmake_flags = getCmakeFlags()
 	local command_str = ""
 
@@ -1237,9 +1221,7 @@ function buildCmakeCommand()
 end
 
 function runCmakeCommand()
-	print("RUNNING runCmakeCommand")
 	local cmd = buildCmakeCommand()
-	print("cmake command: " .. cmd)
 	vim.cmd(cmd)
 end
 
