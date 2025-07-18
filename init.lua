@@ -635,6 +635,7 @@ require("lazy").setup({
 			--        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
 			local servers = {
 				clangd = {},
+				protols = {},
 				-- gopls = {},
 				pyright = {},
 				rust_analyzer = {},
@@ -680,7 +681,7 @@ require("lazy").setup({
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
 			require("mason-lspconfig").setup({
-				ensure_installed = { "clangd", "cmake", "pyright" },
+				ensure_installed = { "clangd", "cmake", "pyright", "zls" },
 				automatic_installation = true,
 				handlers = {
 					function(server_name)
@@ -700,7 +701,7 @@ require("lazy").setup({
 								-- '--completion_style=detailed',
 								"--function-arg-placeholders",
 								"--fallback-style=llvm",
-								"-Wsign-conversion",
+								-- '-Wsign-conversion',
 							},
 							init_options = {
 								usePlaceholders = true,
@@ -713,6 +714,13 @@ require("lazy").setup({
 							),
 						})
 						require("lspconfig").pyright.setup({})
+						require("lspconfig").protols.setup({})
+						require("lspconfig").zls.setup({
+							cmd = { "zls" },
+							filetypes = { "zig", "zir" },
+							root_dir = require("lspconfig").util.root_pattern("build.zig", ".git") or vim.loop.cwd,
+							single_file_support = true,
+						})
 
 						-- require('lspconfig')[server_name].setup(server) {
 						--   -- init_options = {
@@ -1143,6 +1151,7 @@ require("neotest").setup({
 })
 
 require("nvim-treesitter.configs").setup({
+	ensure_installed = { "zig" },
 	highlight = { enable = true },
 	incremental_selection = { enable = true },
 	indent = {
@@ -1162,11 +1171,14 @@ end
 vim.api.nvim_set_keymap("n", "<leader>nr", ":lua NumberToggle()<CR>", { noremap = true, silent = true })
 
 -- CMake Bindings
-vim.g.cmake_default_command_string =
-	":!cmake -S . -B build -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++"
+vim.g.cmake_default_command_string = ":!cmake -S . -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+-- vim.g.cmake_default_command_string = ':!cmake -S . -B build -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++'
 vim.g.cmake_build_type = "Debug"
 vim.g.cmake_unit_tests = "OFF"
 vim.g.cmake_export_compile_commands = 1
+
+vim.g.build_multicore = "OFF"
+vim.g.build_multicore_count = 1
 
 function getCmakeFlags()
 	local flag_string = ""
@@ -1202,6 +1214,34 @@ function getCmakeFlags()
 		end
 
 		flag_string = flag_string .. "-DUNIT_TESTS=ON"
+	else
+		if flag_string ~= "" then
+			flag_string = flag_string .. " "
+		end
+		flag_string = flag_string .. "-DUNIT_TESTS=OFF"
+	end
+
+	-- multi-core compilation
+	if vim.g.cmake_multicore == "ON" then
+		if flag_string ~= "" then
+			flag_string = flag_string .. " "
+		end
+
+		flag_string = flag_string .. "-j" .. vim.g.cmake_multicore_count
+	end
+
+	return flag_string
+end
+function getBuildFlags()
+	local flag_string = ""
+
+	-- multi-core compilation
+	if vim.g.build_multicore == "ON" then
+		if flag_string ~= "" then
+			flag_string = flag_string .. " "
+		end
+
+		flag_string = flag_string .. "-j" .. vim.g.build_multicore_count
 	end
 
 	return flag_string
@@ -1220,10 +1260,51 @@ function buildCmakeCommand()
 	return command_str
 end
 
+function buildCmakeBuildCommand(build_dir)
+	local build_flags = getBuildFlags()
+	local command_str = ""
+
+	if build_flags ~= "" then
+		command_str = ":!cmake --build " .. build_dir .. " " .. build_flags
+	else
+		command_str = ":!cmake --build " .. build_dir
+	end
+
+	return command_str
+end
+
 function runCmakeCommand()
 	local cmd = buildCmakeCommand()
 	vim.cmd(cmd)
 end
+
+function runCmakeBuildCommand(build_dir)
+	local cmd = buildCmakeBuildCommand(build_dir)
+	vim.cmd(cmd)
+end
+
+function printCmakeCommand()
+	local cmd = buildCmakeCommand()
+	print(cmd)
+end
+
+function printCmakeBuildCommand()
+	local cmd = buildCmakeBuildCommand("<build_dir>")
+	print(cmd)
+end
+
+function printCmakeThings()
+	printCmakeCommand()
+	printCmakeBuildCommand()
+end
+
+-- Keybinding to print cmake command with current settings
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader>cp",
+	":lua printCmakeThings()<CR>",
+	{ noremap = true, silent = true, desc = "[P]rint cmake command and build cmd" }
+)
 
 -- Keybinding to configure the project with CMake
 vim.api.nvim_set_keymap(
@@ -1261,17 +1342,45 @@ vim.api.nvim_set_keymap(
 	{ noremap = true, silent = true, desc = "Disable [U]nit tests" }
 )
 
+-- Keybinding to enable multi-core compilation
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader>com",
+	":lua vim.g.build_multicore='ON'<CR>",
+	{ noremap = true, silent = true, desc = "Enable [m]ulti-core compiling" }
+)
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader>coM",
+	":lua vim.g.build_multicore='OFF'<CR>",
+	{ noremap = true, silent = true, desc = "Disable [M]ulti-core compiling" }
+)
+
+-- Keybinding to set number of cores for multi-core compilation
+function setCoreCount()
+	local new_count = vim.fn.input("Number of cores to use for multi-core compiling: ")
+	vim.g.build_multicore_count = new_count
+end
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader>coc",
+	":lua setCoreCount()<CR>",
+	{ noremap = true, silent = true, desc = "Set core [c]ount for compiling" }
+)
+
 -- Keybinding to build with CMake (assuming build directory exists)
+-- vim.api.nvim_set_keymap('n', '<leader>cbb', ':!cmake --build build<CR>', { noremap = true, silent = true, desc = ' [B]uild (build dir)' })
+-- vim.api.nvim_set_keymap('n', '<leader>cb.', ':!cmake --build .<CR>', { noremap = true, silent = true, desc = '[.] (current dir)' })
 vim.api.nvim_set_keymap(
 	"n",
 	"<leader>cbb",
-	":!cmake --build build<CR>",
-	{ noremap = true, silent = true, desc = " [B]uild (build dir)" }
+	':lua runCmakeBuildCommand("build")<CR>',
+	{ noremap = true, silent = true, desc = "[B]uild (build dir)" }
 )
 vim.api.nvim_set_keymap(
 	"n",
 	"<leader>cb.",
-	":!cmake --build .<CR>",
+	':lua runCmakeBuildCommand(".")<CR>',
 	{ noremap = true, silent = true, desc = "[.] (current dir)" }
 )
 
@@ -1281,8 +1390,9 @@ vim.api.nvim_set_keymap(
 -- Testing Bindings
 
 -- Enable LSP for C++ (clangd for example)
-require("lspconfig").clangd.setup({})
-require("lspconfig").marksman.setup({})
+-- require('lspconfig').clangd.setup {}
+-- require('lspconfig').marksman.setup {}
+-- require('lspconfig').protols.setup {}
 
 -- Folds
 -- set default method to `indent`
